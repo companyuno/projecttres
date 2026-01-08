@@ -67,28 +67,54 @@ class Coinbase {
   async getBook(productId) {
     return this.request('GET', `/products/${productId}/book`);
   }
-}
 
-// Test it
-async function test() {
-  const cb = new Coinbase();
-  try {
-    // Test accounts endpoint (like Python example)
-    console.log('Testing accounts endpoint...');
-    const accounts = await cb.request('GET', '/accounts');
-    console.log('✅ Success! Accounts:', accounts.accounts?.length || 0);
+  async getAccounts() {
+    return this.request('GET', '/accounts');
+  }
 
-    console.log('\nTesting products...');
-    const products = await cb.getProducts();
-    console.log('✅ Success! Products:', products.products?.length || 0);
-  } catch (error) {
-    console.error('❌ Error:', error.response?.status, error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      console.log('\n⚠️  401 Unauthorized - API key configuration issue');
-      console.log('Check: IP whitelist, permissions, key is active');
-    }
+  async getFuturesBalanceSummary() {
+    return this.request('GET', '/cfm/balance_summary');
+  }
+
+  async listPerpsPositions(portfolioUuid) {
+    return this.request('GET', `/cfm/positions?portfolio_uuid=${portfolioUuid}`);
+  }
+
+  async getPerpsPosition(portfolioUuid, symbol) {
+    return this.request('GET', `/cfm/positions/${symbol}?portfolio_uuid=${portfolioUuid}`);
+  }
+
+  /**
+   * Get historical candles for a product
+   * @param {string} productId - e.g., "BTC-USD"
+   * @param {string} start - ISO 8601 timestamp (e.g., "2024-01-01T00:00:00Z")
+   * @param {string} end - ISO 8601 timestamp
+   * @param {string} granularity - ONE_MINUTE, FIVE_MINUTE, FIFTEEN_MINUTE, THIRTY_MINUTE, ONE_HOUR, TWO_HOUR, SIX_HOUR, ONE_DAY
+   * @returns {Promise} Array of candles: [{start, low, high, open, close, volume}]
+   */
+  async getCandles(productId, start, end, granularity = 'FIVE_MINUTE') {
+    // Note: JWT uri must NOT include query params, but axios URL can
+    const path = `/products/${productId}/candles`;
+    const queryParams = `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&granularity=${granularity}`;
+
+    // For JWT: path only (no query)
+    // For axios: path + query
+    const jwtPath = `/api/v3/brokerage${path}`;
+    const urlPath = `${path}${queryParams}`;
+
+    const token = this.generateJWT('GET', jwtPath);
+
+    const response = await axios({
+      method: 'GET',
+      url: `${this.baseURL}${urlPath}`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
   }
 }
 
-test();
+module.exports = Coinbase;
 
