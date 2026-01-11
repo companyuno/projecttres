@@ -404,12 +404,16 @@ class RollingVWAP {
       percentile90: percentile(sortedDeviations, 90),
       percentile95: percentile(sortedDeviations, 95),
       percentile99: percentile(sortedDeviations, 99),
+      percentile0_02: percentile(sortedDeviations, 0.02),
       percentile1Percent: percentile(sortedPercentDeviations, 1),
       percentile5Percent: percentile(sortedPercentDeviations, 5),
       percentile10Percent: percentile(sortedPercentDeviations, 10),
       percentile90Percent: percentile(sortedPercentDeviations, 90),
       percentile95Percent: percentile(sortedPercentDeviations, 95),
       percentile99Percent: percentile(sortedPercentDeviations, 99),
+      percentile99_8: percentile(sortedDeviations, 99.8),
+      percentile0_02Percent: percentile(sortedPercentDeviations, 0.02),
+      percentile99_8Percent: percentile(sortedPercentDeviations, 99.8),
       currentPercentile: currentPercentile
     };
   }

@@ -55,6 +55,28 @@
       color: white;
     }
 
+    .restart-button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #4fc3f7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .restart-button:hover {
+      background: #29b6f6;
+    }
+
+    .restart-button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -187,6 +209,12 @@
     <div class="header">
       <h1>VWAP Tracker</h1>
       <div id="connectionStatus" class="status disconnected">Disconnected</div>
+      <div style="margin-top: 10px;">
+        <button id="algorithmButton" class="restart-button" onclick="toggleAlgorithm()" style="margin-right: 10px;">Start Algorithm</button>
+        <button id="restartButton" class="restart-button" onclick="restartTracker()" style="background: #666; font-size: 12px; padding: 6px 12px;">Restart Tracker</button>
+      </div>
+      <div id="algorithmStatus" style="margin-top: 10px; color: #9e9e9e; font-size: 14px;">Algorithm: Stopped</div>
+      <div id="lastUpdate" style="margin-top: 10px; color: #9e9e9e; font-size: 12px;">Waiting for data...</div>
     </div>
 
     <div class="stats-grid">
@@ -204,6 +232,88 @@
     <div class="status-indicator" id="statusIndicator">
       <div class="label">Price vs VWAP</div>
       <div class="value" id="deviation">--</div>
+    </div>
+
+    <!-- Position Display -->
+    <div class="info" id="positionSection">
+      <h3 style="color: #4fc3f7; margin-bottom: 15px;">Open Position</h3>
+      <div class="info-item">
+        <span class="info-label">Type:</span>
+        <span class="info-value" id="positionType">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Size:</span>
+        <span class="info-value" id="positionSize">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Entry Levels:</span>
+        <span class="info-value" id="entryLevels">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Avg Entry Price:</span>
+        <span class="info-value" id="avgEntryPrice">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Current Price:</span>
+        <span class="info-value" id="positionCurrentPrice">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Unrealized P&L (Before Fees):</span>
+        <span class="info-value" id="unrealizedPnLBeforeFees">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Entry Fees:</span>
+        <span class="info-value" id="entryFees">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Estimated Exit Fees:</span>
+        <span class="info-value" id="estimatedExitFees">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Total Fees:</span>
+        <span class="info-value" id="totalFees">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Unrealized P&L (After Fees):</span>
+        <span class="info-value" id="unrealizedPnLAfterFees">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Stop Loss (Absolute):</span>
+        <span class="info-value" id="stopLossAbsolute">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Current Deviation:</span>
+        <span class="info-value" id="positionDeviation">--</span>
+      </div>
+    </div>
+
+    <!-- Reentry Status Display (when no position or waiting for reentry) -->
+    <div class="info" id="reentrySection" style="display: none;">
+      <h3 style="color: #ff9800; margin-bottom: 15px;">Reentry Status</h3>
+      <div class="info-item">
+        <span class="info-label">Status:</span>
+        <span class="info-value" id="reentryStatus">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Last Stop:</span>
+        <span class="info-value" id="lastStopType">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Neutral Range:</span>
+        <span class="info-value" id="neutralRange">--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Current Deviation:</span>
+        <span class="info-value" id="reentryCurrentDeviation">--</span>
+      </div>
+    </div>
+
+    <!-- Strategy Levels Display -->
+    <div class="info" id="strategyLevelsSection">
+      <h3 style="color: #9c27b0; margin-bottom: 15px;">Strategy Levels</h3>
+      <div id="strategyLevelsContent">
+        <p style="color: #9e9e9e; font-style: italic;">Waiting for VWAP data...</p>
+      </div>
     </div>
 
     <div class="info">
@@ -225,7 +335,34 @@
       </div>
     </div>
 
-    <div class="last-update" id="lastUpdate">Waiting for data...</div>
+    <!-- Performance Metrics -->
+    <div class="info">
+      <h3 style="color: #4fc3f7; margin-bottom: 15px;">Performance</h3>
+      <div class="info-item">
+        <span class="info-label">Total Trades:</span>
+        <span class="info-value" id="totalTrades">0</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Win Rate:</span>
+        <span class="info-value" id="winRate">0%</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Realized P&L:</span>
+        <span class="info-value" id="realizedPnL">$0.00</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Total Return:</span>
+        <span class="info-value" id="totalReturn">0%</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Cash Balance:</span>
+        <span class="info-value" id="cashBalance">$10,000.00</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Total Equity:</span>
+        <span class="info-value" id="totalEquity">$10,000.00</span>
+      </div>
+    </div>
 
     <div class="chart-container">
       <h3>Deviation History (72h)</h3>
@@ -249,6 +386,12 @@
         return;
       }
 
+      // Update last update time for any data received
+      if (data.vwap !== null && data.vwap !== undefined) {
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = `Last update: ${now.toLocaleTimeString()}`;
+      }
+
       // Handle VWAP updates
       if (data.vwap !== null && data.vwap !== undefined) {
         updateDashboard(data);
@@ -256,6 +399,11 @@
           updateConnectionStatus(true);
           isConnected = true;
         }
+      }
+
+      // Handle algorithm status updates
+      if (data.algorithmRunning !== undefined) {
+        updateAlgorithmStatus(data.algorithmRunning);
       }
     };
 
@@ -296,13 +444,22 @@
       document.getElementById('totalVolume').textContent = stats.totalVolume?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '--';
       document.getElementById('window').textContent = `${stats.windowHours || 12} hours`;
 
-      // Update last update time
-      const now = new Date();
-      document.getElementById('lastUpdate').textContent = `Last update: ${now.toLocaleTimeString()}`;
-
       // Update deviation chart
       if (stats.deviationHistory && stats.deviationHistory.data) {
         updateDeviationChart(stats.deviationHistory);
+      }
+
+      // Update position display
+      updatePositionDisplay(stats.position, stats.stopLossLevels, stats.reentryStatus);
+
+      // Update strategy levels display
+      if (stats.strategyLevels) {
+        updateStrategyLevels(stats.strategyLevels);
+      }
+
+      // Update performance metrics
+      if (stats.performance) {
+        updatePerformanceDisplay(stats.performance);
       }
     }
 
@@ -326,6 +483,132 @@
         maximumFractionDigits: 2
       }).format(value);
     }
+
+    function updateAlgorithmStatus(running) {
+      const button = document.getElementById('algorithmButton');
+      const status = document.getElementById('algorithmStatus');
+
+      if (running) {
+        button.textContent = 'Stop Algorithm';
+        button.style.background = '#f44336';
+        status.textContent = 'Algorithm: Running';
+        status.style.color = '#4caf50';
+      } else {
+        button.textContent = 'Start Algorithm';
+        button.style.background = '#4fc3f7';
+        status.textContent = 'Algorithm: Stopped';
+        status.style.color = '#9e9e9e';
+      }
+    }
+
+    async function toggleAlgorithm() {
+      const button = document.getElementById('algorithmButton');
+      const currentState = button.textContent === 'Start Algorithm';
+      const endpoint = currentState ? '/api/algorithm/start' : '/api/algorithm/stop';
+      const action = currentState ? 'Starting' : 'Stopping';
+
+      button.disabled = true;
+      button.textContent = `${action}...`;
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          updateAlgorithmStatus(result.algorithmRunning);
+          if (!currentState) {
+            // Algorithm stopped - positions closed
+            console.log('Algorithm stopped - all positions closed');
+          }
+        } else {
+          throw new Error(result.message || 'Failed to toggle algorithm');
+        }
+      } catch (error) {
+        console.error('Algorithm toggle error:', error);
+        alert(`Error: ${error.message}`);
+        // Reset button state
+        const stats = await fetch('/api/algorithm/status').then(r => r.json());
+        updateAlgorithmStatus(stats.algorithmRunning);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function restartTracker() {
+      const button = document.getElementById('restartButton');
+      const originalText = button.textContent;
+
+      button.disabled = true;
+      button.textContent = 'Restarting...';
+
+      try {
+        const response = await fetch('/api/restart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          button.textContent = 'Restarted!';
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 2000);
+
+          // Update connection status
+          updateConnectionStatus(false);
+          setTimeout(() => {
+            updateConnectionStatus(true);
+          }, 3000);
+        } else {
+          throw new Error(result.message || 'Restart failed');
+        }
+      } catch (error) {
+        console.error('Restart error:', error);
+        button.textContent = 'Error - Try Again';
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        }, 3000);
+      }
+    }
+
+    // Periodic health check and algorithm status sync
+    setInterval(async () => {
+      try {
+        const response = await fetch('/api/health');
+        const health = await response.json();
+
+        if (!health.connected && isConnected) {
+          console.log('⚠️ Connection lost, updating status');
+          updateConnectionStatus(false);
+          isConnected = false;
+        } else if (health.connected && !isConnected) {
+          console.log('✅ Connection restored');
+          updateConnectionStatus(true);
+          isConnected = true;
+        }
+
+        // Sync algorithm status
+        const algoStatus = await fetch('/api/algorithm/status').then(r => r.json());
+        updateAlgorithmStatus(algoStatus.algorithmRunning);
+      } catch (error) {
+        // Server might be down
+        if (isConnected) {
+          updateConnectionStatus(false);
+          isConnected = false;
+        }
+      }
+    }, 10000); // Check every 10 seconds
 
     function updateDeviationChart(deviationHistory) {
       const ctx = document.getElementById('deviationChart');
@@ -515,6 +798,251 @@
         deviationChart.data.datasets[7].data = deviationPercents; // Deviation line
         deviationChart.update('none'); // 'none' mode for smooth updates
       }
+    }
+
+    function updatePositionDisplay(positionState, stopLossLevels, reentryStatus) {
+      const positionSection = document.getElementById('positionSection');
+      const reentrySection = document.getElementById('reentrySection');
+
+      // Always show the position section
+      positionSection.style.display = 'block';
+
+      // Check if there's an open position
+      if (!positionState || !positionState.position) {
+        // No position - show placeholder values
+        document.getElementById('positionType').textContent = 'No Position';
+        document.getElementById('positionType').style.color = '#9e9e9e';
+        document.getElementById('positionSize').textContent = '--';
+        document.getElementById('entryLevels').textContent = '--';
+        document.getElementById('avgEntryPrice').textContent = '--';
+        document.getElementById('positionCurrentPrice').textContent = '--';
+        document.getElementById('unrealizedPnLBeforeFees').textContent = '$0.00';
+        document.getElementById('unrealizedPnLBeforeFees').style.color = '#9e9e9e';
+        document.getElementById('entryFees').textContent = '$0.00';
+        document.getElementById('estimatedExitFees').textContent = '$0.00';
+        document.getElementById('totalFees').textContent = '$0.00';
+        document.getElementById('unrealizedPnLAfterFees').textContent = '$0.00';
+        document.getElementById('unrealizedPnLAfterFees').style.color = '#9e9e9e';
+        document.getElementById('stopLossAbsolute').textContent = '--';
+        document.getElementById('positionDeviation').textContent = '--';
+        document.getElementById('positionDeviation').style.color = '#9e9e9e';
+
+        // Show reentry status if waiting for neutral range
+        if (reentryStatus && reentryStatus.waiting) {
+          reentrySection.style.display = 'block';
+          document.getElementById('reentryStatus').textContent = '⏳ Waiting for Neutral Range';
+          document.getElementById('reentryStatus').style.color = '#ff9800';
+          document.getElementById('lastStopType').textContent = reentryStatus.lastStopType === 'short' ? 'Short @ +2.25%' : 'Long @ -2.4%';
+          document.getElementById('neutralRange').textContent = `${reentryStatus.neutralRange.min}% to ${reentryStatus.neutralRange.max}%`;
+
+          // Get current deviation from stopLossLevels
+          if (stopLossLevels && stopLossLevels.current !== null) {
+            const currentDev = stopLossLevels.current;
+            const devEl = document.getElementById('reentryCurrentDeviation');
+            devEl.textContent = `${currentDev.toFixed(2)}%`;
+
+            // Color code: green if in range, red if outside
+            if (currentDev >= reentryStatus.neutralRange.min && currentDev <= reentryStatus.neutralRange.max) {
+              devEl.style.color = '#4caf50';
+            } else {
+              devEl.style.color = '#ff9800';
+            }
+          } else {
+            document.getElementById('reentryCurrentDeviation').textContent = '--';
+          }
+        } else {
+          reentrySection.style.display = 'none';
+        }
+        return;
+      }
+
+      // Position exists - show actual data
+      const pos = positionState.position;
+
+      // Position type with color
+      const typeEl = document.getElementById('positionType');
+      typeEl.textContent = pos.type.toUpperCase();
+      typeEl.style.color = pos.type === 'long' ? '#4caf50' : '#f44336';
+
+      document.getElementById('positionSize').textContent = `${pos.totalContractCount} contract${pos.totalContractCount !== 1 ? 's' : ''} (${pos.totalSizeInBTC.toFixed(2)} BTC)`;
+      document.getElementById('entryLevels').textContent = pos.entryLevels.join(', ');
+      document.getElementById('avgEntryPrice').textContent = formatCurrency(pos.avgEntryPrice);
+      document.getElementById('positionCurrentPrice').textContent = formatCurrency(pos.currentPrice || 0);
+
+      // Unrealized P&L Before Fees with color
+      const unrealizedPnLBeforeFeesEl = document.getElementById('unrealizedPnLBeforeFees');
+      const unrealizedPnLBeforeFees = positionState.unrealizedPnLBeforeFees || 0;
+      unrealizedPnLBeforeFeesEl.textContent = formatCurrency(unrealizedPnLBeforeFees);
+      unrealizedPnLBeforeFeesEl.style.color = unrealizedPnLBeforeFees >= 0 ? '#4caf50' : '#f44336';
+
+      // Entry Fees
+      const entryFees = positionState.entryFees || 0;
+      document.getElementById('entryFees').textContent = formatCurrency(entryFees);
+
+      // Estimated Exit Fees
+      const estimatedExitFees = positionState.estimatedExitFees || 0;
+      document.getElementById('estimatedExitFees').textContent = formatCurrency(estimatedExitFees);
+
+      // Total Fees
+      const totalFees = positionState.totalFees || 0;
+      document.getElementById('totalFees').textContent = formatCurrency(totalFees);
+
+      // Unrealized P&L After Fees with color
+      const unrealizedPnLAfterFeesEl = document.getElementById('unrealizedPnLAfterFees');
+      const unrealizedPnLAfterFees = positionState.unrealizedPnLAfterFees || 0;
+      unrealizedPnLAfterFeesEl.textContent = formatCurrency(unrealizedPnLAfterFees);
+      unrealizedPnLAfterFeesEl.style.color = unrealizedPnLAfterFees >= 0 ? '#4caf50' : '#f44336';
+
+      // Stop loss levels (absolute only - no percentile)
+      if (stopLossLevels && stopLossLevels.absolute !== null) {
+        document.getElementById('stopLossAbsolute').textContent = `${stopLossLevels.absolute.toFixed(2)}%`;
+      } else {
+        document.getElementById('stopLossAbsolute').textContent = '--';
+      }
+
+      // Hide reentry section when position is open (can't be waiting if position is open)
+      reentrySection.style.display = 'none';
+
+      // Current deviation
+      if (pos.currentDeviation !== null && pos.currentDeviation !== undefined) {
+        const devEl = document.getElementById('positionDeviation');
+        devEl.textContent = `${pos.currentDeviation.toFixed(2)}%`;
+        devEl.style.color = pos.currentDeviation >= 0 ? '#f44336' : '#4caf50';
+      } else {
+        document.getElementById('positionDeviation').textContent = '--';
+      }
+    }
+
+    function updateStrategyLevels(levels) {
+      const contentDiv = document.getElementById('strategyLevelsContent');
+      if (!levels) {
+        contentDiv.innerHTML = '<p style="color: #9e9e9e; font-style: italic;">Waiting for VWAP data...</p>';
+        return;
+      }
+
+      const currentPrice = levels.currentPrice;
+      const formatDistance = (distance) => {
+        if (distance === null || distance === undefined) return 'N/A';
+        const sign = distance >= 0 ? '+' : '';
+        return `${sign}${distance.toFixed(2)}%`;
+      };
+
+      const formatLevel = (label, price, deviation, distance, color, thresholdComponents) => {
+        const distanceStr = formatDistance(distance);
+        const distanceColor = distance !== null && distance !== undefined
+          ? (Math.abs(distance) < 0.5 ? '#ff9800' : '#9e9e9e')
+          : '#9e9e9e';
+
+        // Build threshold info showing max/min and both values
+        let thresholdInfo = '';
+        if (thresholdComponents) {
+          const keys = Object.keys(thresholdComponents);
+          if (keys.length === 2) {
+            const percentileKey = keys.find(k => k.startsWith('p'));
+            const percentileVal = thresholdComponents[percentileKey];
+            const absoluteVal = thresholdComponents.absolute;
+
+            // Determine if it's max (short) or min (long)
+            const isMax = percentileKey && (percentileKey === 'p90' || percentileKey === 'p95');
+            const operator = isMax ? 'max' : 'min';
+            const percentileLabel = percentileKey || 'p?';
+
+            thresholdInfo = `${operator}(${percentileLabel}=${percentileVal >= 0 ? '+' : ''}${percentileVal.toFixed(2)}%, abs=${absoluteVal >= 0 ? '+' : ''}${absoluteVal.toFixed(2)}%)`;
+          }
+        }
+
+        // Format distance description
+        let distanceDesc = '';
+        if (distance !== null && distance !== undefined) {
+          if (distance > 0) {
+            distanceDesc = `${Math.abs(distance).toFixed(2)}% below entry`;
+          } else if (distance < 0) {
+            distanceDesc = `${Math.abs(distance).toFixed(2)}% above entry`;
+          } else {
+            distanceDesc = 'at entry level';
+          }
+        } else {
+          distanceDesc = 'N/A';
+        }
+
+        return `
+          <div class="info-item" style="border-left: 3px solid ${color}; padding-left: 10px; margin-bottom: 10px;">
+            <div style="margin-bottom: 4px;">
+              <span class="info-label" style="font-weight: 600;">${label}:</span>
+              <span class="info-value" style="color: ${color}; font-weight: 600; margin-left: 8px;">${formatCurrency(price)}</span>
+              <span style="font-size: 12px; color: #9e9e9e; margin-left: 8px;">(${deviation >= 0 ? '+' : ''}${deviation.toFixed(2)}% from VWAP)</span>
+            </div>
+            ${thresholdInfo ? `<div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Threshold: ${thresholdInfo}</div>` : ''}
+            <div style="font-size: 11px; color: ${distanceColor};">
+              Distance: ${distanceDesc}
+            </div>
+          </div>
+        `;
+      };
+
+      let html = `
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #4fc3f7; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Entry Levels:</h4>
+          ${formatLevel('Short 1 Entry', levels.entries.short1.price, levels.entries.short1.deviation, levels.entries.short1.distanceFromCurrent, '#f44336', levels.entries.short1.thresholdComponents)}
+          ${formatLevel('Short 2 Entry', levels.entries.short2.price, levels.entries.short2.deviation, levels.entries.short2.distanceFromCurrent, '#d32f2f', levels.entries.short2.thresholdComponents)}
+          ${formatLevel('Long 1 Entry', levels.entries.long1.price, levels.entries.long1.deviation, levels.entries.long1.distanceFromCurrent, '#4caf50', levels.entries.long1.thresholdComponents)}
+          ${formatLevel('Long 2 Entry', levels.entries.long2.price, levels.entries.long2.deviation, levels.entries.long2.distanceFromCurrent, '#388e3c', levels.entries.long2.thresholdComponents)}
+        </div>
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #4fc3f7; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Exit Levels:</h4>
+          ${formatLevel('Short Stop Loss', levels.exits.shortStop.price, levels.exits.shortStop.deviation, levels.exits.shortStop.distanceFromCurrent, '#ff5722')}
+          ${formatLevel('Long Stop Loss', levels.exits.longStop.price, levels.exits.longStop.deviation, levels.exits.longStop.distanceFromCurrent, '#ff5722')}
+          <div class="info-item" style="border-left: 3px solid #ffc107; padding-left: 10px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="info-label" style="font-weight: 600;">Take Profit:</span>
+              <span class="info-value" style="color: #ffc107;">±${levels.exits.takeProfit.deviation.toFixed(2)}%</span>
+            </div>
+            <div style="margin-top: 4px; font-size: 12px; color: #9e9e9e;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Above: ${formatCurrency(levels.exits.takeProfit.priceAbove)}</span>
+                <span style="color: ${levels.exits.takeProfit.distanceFromCurrentAbove !== null && Math.abs(levels.exits.takeProfit.distanceFromCurrentAbove) < 0.5 ? '#ff9800' : '#9e9e9e'};">
+                  Distance: ${formatDistance(levels.exits.takeProfit.distanceFromCurrentAbove)}
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-top: 2px;">
+                <span>Below: ${formatCurrency(levels.exits.takeProfit.priceBelow)}</span>
+                <span style="color: ${levels.exits.takeProfit.distanceFromCurrentBelow !== null && Math.abs(levels.exits.takeProfit.distanceFromCurrentBelow) < 0.5 ? '#ff9800' : '#9e9e9e'};">
+                  Distance: ${formatDistance(levels.exits.takeProfit.distanceFromCurrentBelow)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+          <div class="info-item">
+            <span class="info-label">VWAP:</span>
+            <span class="info-value" style="color: #4fc3f7;">${formatCurrency(levels.vwap)}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Current Price:</span>
+            <span class="info-value">${formatCurrency(currentPrice)}</span>
+          </div>
+        </div>
+      `;
+
+      contentDiv.innerHTML = html;
+    }
+
+    function updatePerformanceDisplay(performance) {
+      document.getElementById('totalTrades').textContent = performance.totalTrades || 0;
+      document.getElementById('winRate').textContent = `${(performance.winRate || 0).toFixed(1)}%`;
+
+      const realizedPnLEl = document.getElementById('realizedPnL');
+      const realizedPnL = performance.totalRealizedPnL || 0;
+      realizedPnLEl.textContent = formatCurrency(realizedPnL);
+      realizedPnLEl.style.color = realizedPnL >= 0 ? '#4caf50' : '#f44336';
+
+      const totalReturnEl = document.getElementById('totalReturn');
+      const totalReturn = performance.totalReturn || 0;
+      totalReturnEl.textContent = `${totalReturn.toFixed(2)}%`;
+      totalReturnEl.style.color = totalReturn >= 0 ? '#4caf50' : '#f44336';
+
+      document.getElementById('cashBalance').textContent = formatCurrency(performance.currentCashBalance || 10000);
     }
   </script>
 </body>
